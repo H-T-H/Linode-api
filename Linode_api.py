@@ -1,7 +1,7 @@
 import requests
 import json
 
-class linode:
+class linode:    
     
     api_url = 'https://api.linode.com/v4/'
 
@@ -10,7 +10,7 @@ class linode:
 
 
     #在该账号中创建实例
-    def create_linode(type_, region, self, root_password, image, stackscript_id):
+    def create_linode(self, type_, region, root_password, image, stackscript_id):
         # 设置请求头
         headers = {
             'Content-Type': 'application/json',
@@ -40,27 +40,22 @@ class linode:
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {self.api_key}',
-        }
+            }
 
-        # 获取 Linode 实例列表
         get_response = requests.get(self.api_url + 'linode/instances', headers=headers)
 
         if get_response.status_code == 200:
-            linodes_data = get_response.json()
-            linodes_data_1 = linodes_data['data']
-            #删除
-            if linodes_data:
-                for linode in linodes_data_1:
-                    linode_id = linode['id']
-                    delete_response = requests.delete(self.api_url + f'linode/instances/{linode_id}', headers=headers)
+            linodes_data = get_response.json()['data']
 
-                if delete_response.status_code == 200:
-                    print(f"all instances delete successfully")
+            for linode in linodes_data:
+                linode_id = linode['id']
+                delete_response = requests.delete(self.api_url + f'linode/instances/{linode_id}', headers=headers)
+                if delete_response.status_code != 200:
+                    print(f"Failed to delete Linode instance {linode_id}, HTTP code: {delete_response.status_code}")
+                    print(f"Error info: {delete_response.text}")
                 else:
-                    print(f"Linode instance delete fail,HTTP code: {delete_response.status_code}")
-                    print(f"error info: {delete_response.text}")
+                    print(f"Linode instance {linode_id} deleted successfully")
         else:
-            print(f"get Linode instance fail,HTTP code: {get_response.status_code}")
-            print(f"error info: {get_response.text}")
-            return None
+            print(f"Failed to get Linode instances, HTTP code: {get_response.status_code}")
+            print(f"Error info: {get_response.text}")
     
